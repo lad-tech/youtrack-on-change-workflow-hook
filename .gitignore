@@ -2,3 +2,6 @@
 /.idea/prettier.xml
 /.idea/vcs.xml
 /.idea/youtrack-on-change-workflow-hook.iml
+/.idea/*
+/.idea
+/.idea/git_toolbox_prj.xml
