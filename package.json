@@ -1,0 +1,22 @@
+{
+  "name": "youtrack-on-change-workflow-hook",
+  "title": "Generating and send event",
+  "description": null,
+  "dependencies" : {
+    "@jetbrains/youtrack-scripting-api" : "^2017.4.38030"
+  },
+  "youtrack": {
+    "autoAttached": false,
+    "readOnly": false
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lad-tech/youtrack-on-change-workflow-hook.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lad-tech/youtrack-on-change-workflow-hook/issues"
+  },
+  "homepage": "https://github.com/lad-tech/youtrack-on-change-workflow-hook#readme"
+}
