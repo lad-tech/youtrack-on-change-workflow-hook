@@ -27,6 +27,28 @@ const TrackedFields = [{
     getValue: (issue) => (issue.State.name)
 
   },
+  {
+
+    name: 'tags',
+    isChanged: (issue) => (issue.tags && (issue.tags.added && issue.tags.removed)),
+    getOldValue: (issue) => {
+      const tags = [];
+      (issue.tags.removed ||[]).forEach(item=>{
+        console.log('removed',item.name);
+        tags.push(item.name)
+      })
+      return tags;
+    },
+    getValue:(issue) => {
+      const tags = [];
+      (issue.tags.added ||[]).forEach(item=>{
+        console.log('added',item.name);
+        tags.push(item.name)
+      })
+      return tags;
+    },
+
+  },
 
 
 
@@ -78,7 +100,9 @@ exports.rule = entities.Issue.onChange({
         newValue,
         oldValue
       });
+
     }
+    console.log(changes);
     const response = connection.postSync('/65888504-dcf1-495d-ab65-6efb62bf8289', [], {
       id: issue.id,
       url: issue.url,
