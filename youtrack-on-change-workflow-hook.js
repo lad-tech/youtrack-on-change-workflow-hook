@@ -16,8 +16,8 @@ const TrackedFields = [{
   {
     name: 'Assignee',
     isChanged: (issue) => (issue.oldValue('Assignee') !== null),
-    getOldValue: (issue) => ((issue.oldValue('Assignee') && issue.oldValue('Assignee').email) ||''),
-    getValue: (issue) => (issue.fields.Assignee.email)
+    getOldValue: (issue) => ((issue.oldValue('Assignee') && issue.oldValue('Assignee')!==null && issue.oldValue('Assignee').email) ||''),
+    getValue: (issue) => ((issue.fields.Assignee && issue.fields.Assignee.email && issue.fields.Assignee.email) ||'')
 
   },
   {
@@ -30,7 +30,7 @@ const TrackedFields = [{
 
 
 
-]
+];
 exports.rule = entities.Issue.onChange({
   // TODO: give the rule a human-readable title
   title: 'Youtrack-send-issue',
@@ -79,7 +79,7 @@ exports.rule = entities.Issue.onChange({
         oldValue
       });
     }
-    const response = connection.postSync('/542b1294-60f7-4573-923a-e3a97172411a', [], {
+    const response = connection.postSync('/65888504-dcf1-495d-ab65-6efb62bf8289', [], {
       id: issue.id,
       url: issue.url,
       reporter: ctx.issue.reporter.email,
