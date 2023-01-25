@@ -2,8 +2,8 @@
   "name": "youtrack-on-change-workflow-hook",
   "title": "Generating and send event",
   "description": null,
-  "dependencies" : {
-    "@jetbrains/youtrack-scripting-api" : "^2017.4.38030"
+  "dependencies": {
+    "prettier": "^2.8.3"
   },
   "youtrack": {
     "autoAttached": false,
