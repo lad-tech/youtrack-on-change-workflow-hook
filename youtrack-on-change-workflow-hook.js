@@ -1,81 +1,77 @@
 const entities = require('@jetbrains/youtrack-scripting-api/entities');
 const http = require('@jetbrains/youtrack-scripting-api/http');
 const workflow = require('@jetbrains/youtrack-scripting-api/workflow');
-const TrackedFields = [{
-
-  name: 'summary',
-  isChanged: (issue) => (issue.summary !== issue.oldValue('summary'))
-
-},
+const HOOK_URL = 'https://webhook.site';
+const HOOK_PATH = '/542b1294-60f7-4573-923a-e3a97172411a';
+const trackedFields = [
   {
-
+    name: 'summary',
+    isChanged: issue => issue.summary !== issue.oldValue('summary'),
+    getValue: issue => issue.summary || '',
+    getOldValue: issue => issue.oldValue('summary') || '',
+  },
+  {
     name: 'description',
-    isChanged: (issue) => (issue.description !== issue.oldValue('description'))
-
+    isChanged: issue => issue.description !== issue.oldValue('description'),
+    getValue: issue => issue.description || '',
+    getOldValue: issue => issue.oldValue('description') || '',
   },
   {
     name: 'Assignee',
-    isChanged: (issue) => (issue.oldValue('Assignee') !== null),
-    getOldValue: (issue) => ((issue.oldValue('Assignee') && issue.oldValue('Assignee')!==null && issue.oldValue('Assignee').email) ||''),
-    getValue: (issue) => ((issue.fields.Assignee && issue.fields.Assignee.email && issue.fields.Assignee.email) ||'')
-
+    isChanged: issue => issue.oldValue('Assignee') !== null,
+    getOldValue: issue =>
+      (issue.oldValue('Assignee') && issue.oldValue('Assignee') !== null && issue.oldValue('Assignee').email) || '',
+    getValue: issue => (issue.fields.Assignee && issue.fields.Assignee.email && issue.fields.Assignee.email) || '',
   },
   {
     name: 'State',
-    isChanged: (issue) => (issue.oldValue("State")!== null),
-    getOldValue: (issue) => (issue.oldValue("State").name),
-    getValue: (issue) => (issue.State.name)
-
+    isChanged: issue => issue.oldValue('State') !== null,
+    getOldValue: issue => issue.oldValue('State').name,
+    getValue: issue => issue.State.name,
   },
   {
-
     name: 'tags',
-    isChanged: (issue) => (issue.tags && (issue.tags.added && issue.tags.removed)),
-    getOldValue: (issue) => {
+    isChanged: issue => issue.tags && issue.tags.added && issue.tags.removed,
+    getOldValue: issue => {
       const tags = [];
-      (issue.tags.removed ||[]).forEach(item=>{
-        console.log('removed',item.name);
-        tags.push(item.name)
-      })
+      (issue.oldValue('tags') || []).forEach(item => {
+        console.log('removed', item.name);
+        tags.push(item.name);
+      });
       return tags;
     },
-    getValue:(issue) => {
+    getValue: issue => {
       const tags = [];
-      (issue.tags.added ||[]).forEach(item=>{
-        console.log('added',item.name);
-        tags.push(item.name)
-      })
+      (issue.tags || []).forEach(item => {
+        console.log('added', item.name);
+        tags.push(item.name);
+      });
       return tags;
     },
-
   },
-
-
-
 ];
-exports.rule = entities.Issue.onChange({
-  // TODO: give the rule a human-readable title
-  title: 'Youtrack-send-issue',
-  guard: (ctx) => {
-    const issue = ctx.issue;
-    // TODO specify the conditions for executing the rule
 
-    return ctx.issue.isReported;
-  },
+function sendHook(payload) {
+  const connection = new http.Connection(HOOK_URL);
+  connection.addHeader('Content-Type', 'application/json');
+  connection.addHeader('x-youtrack-token', 'your secure token');
+  connection.postSync(HOOK_PATH, [], payload);
+}
+
+exports.rule = entities.Issue.onChange({
+  title: 'Хук отправки изменений в гитлаб',
+  guard: ctx => ctx.issue.isReported,
   runOn: 'change',
-  action: (ctx) => {
+  action: ctx => {
     const issue = ctx.issue;
     let user = issue.fields.Assignee;
     if (!user) {
       user = issue.project.leader;
     }
-    const connection = new http.Connection('https://webhook.site');
-    connection.addHeader('Content-Type', 'application/json');
-    connection.addHeader('x-youtrack-token', '123321');
 
     let changes = [];
-    for (let i = 0; i < TrackedFields.length; i++) {
-      const field = TrackedFields[i];
+    for (let i = 0; i < trackedFields.length; i++) {
+      const field = trackedFields[i];
       const issueKey = field.name;
       if (!field.isChanged(issue)) {
         continue;
@@ -94,16 +90,13 @@ exports.rule = entities.Issue.onChange({
         oldValue = field.getOldValue(issue);
       }
 
-
       changes.push({
         name: issueKey,
         newValue,
-        oldValue
+        oldValue,
       });
-
     }
-    console.log(changes);
-    const response = connection.postSync('/65888504-dcf1-495d-ab65-6efb62bf8289', [], {
+    sendHook({
       id: issue.id,
       url: issue.url,
       reporter: ctx.issue.reporter.email,
@@ -113,13 +106,10 @@ exports.rule = entities.Issue.onChange({
       Assignee: user.email,
       userFullName: user.fullName,
       summary: issue.summary || '-----',
-      tags: ctx.issue.tags || [],
       changes,
-
     });
-    workflow.message('Синхронизация изменений в гитлаб....');
+
+    workflow.message(`Синхронизация изменений  по задаче ${issue.id} в гитлаб....`);
   },
-  requirements: {
-    // TODO: add requirements
-  }
+  requirements: {},
 });

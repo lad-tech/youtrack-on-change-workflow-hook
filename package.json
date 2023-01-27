@@ -1,8 +1,22 @@
 {
   "name": "youtrack-on-change-workflow-hook",
   "title": "Generating and send event",
-  "description": null,
+  "description": "Процесс генерации хука со списком изменений для youtrack",
+  "scripts": {
+    "lint": "eslint -c .eslintrc.js ",
+    "lint:write": "eslint -c .eslintrc.js --fix "
+  },
   "dependencies": {
+    "@commitlint/cli": "^17.2.0",
+    "@commitlint/config-conventional": "^17.2.0",
+    "@jetbrains/youtrack-scripting-api": "^2022.1.46592",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "lefthook": "^1.2.0",
     "prettier": "^2.8.3"
   },
   "youtrack": {
@@ -13,7 +27,7 @@
     "type": "git",
     "url": "git+https://github.com/lad-tech/youtrack-on-change-workflow-hook.git"
   },
-  "author": "",
+  "author": "Blynsky Niki",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/lad-tech/youtrack-on-change-workflow-hook/issues"
