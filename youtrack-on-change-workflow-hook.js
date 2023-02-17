@@ -2,7 +2,11 @@ const entities = require('@jetbrains/youtrack-scripting-api/entities');
 const http = require('@jetbrains/youtrack-scripting-api/http');
 const workflow = require('@jetbrains/youtrack-scripting-api/workflow');
 const HOOK_URL = 'https://webhook.site';
-const HOOK_PATH = '/542b1294-60f7-4573-923a-e3a97172411a';
+const HOOK_PATH = '/65888504-dcf1-495d-ab65-6efb62bf8289';
+const HOOK_TOKEN = 'SuperSecretToken';
+const tagFilterFn = item => {
+  return item !== 'Звезда';
+};
 const trackedFields = [
   {
     name: 'summary',
@@ -38,7 +42,7 @@ const trackedFields = [
         console.log('removed', item.name);
         tags.push(item.name);
       });
-      return tags;
+      return tags.filter(tagFilterFn).sort();
     },
     getValue: issue => {
       const tags = [];
@@ -46,7 +50,7 @@ const trackedFields = [
         console.log('added', item.name);
         tags.push(item.name);
       });
-      return tags;
+      return tags.filter(tagFilterFn).sort();
     },
   },
 ];
@@ -54,7 +58,7 @@ const trackedFields = [
 function sendHook(payload) {
   const connection = new http.Connection(HOOK_URL);
   connection.addHeader('Content-Type', 'application/json');
-  connection.addHeader('x-youtrack-token', 'your secure token');
+  connection.addHeader('x-youtrack-token', HOOK_TOKEN);
   connection.postSync(HOOK_PATH, [], payload);
 }
 
@@ -96,16 +100,23 @@ exports.rule = entities.Issue.onChange({
         oldValue,
       });
     }
+    const tags = [];
+    (issue.tags || []).forEach(item => {
+      console.log('added', item.name);
+      tags.push(item.name);
+    });
     sendHook({
+      tags: tags.filter(tagFilterFn).sort(),
       id: issue.id,
       url: issue.url,
       reporter: ctx.issue.reporter.email,
       projectName: issue.project.name || '-',
       state: issue.State.name || '-',
       description: issue.description || '-',
-      Assignee: user.email,
+      assignee: user.email,
       userFullName: user.fullName,
       summary: issue.summary || '-----',
+
       changes,
     });
 
