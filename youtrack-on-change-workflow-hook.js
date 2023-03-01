@@ -2,11 +2,15 @@ const entities = require('@jetbrains/youtrack-scripting-api/entities');
 const http = require('@jetbrains/youtrack-scripting-api/http');
 const workflow = require('@jetbrains/youtrack-scripting-api/workflow');
 const HOOK_URL = 'https://webhook.site';
-const HOOK_PATH = '/65888504-dcf1-495d-ab65-6efb62bf8289';
+const HOOK_PATH = '/qq';
 const HOOK_TOKEN = 'SuperSecretToken';
-const tagFilterFn = item => {
-  return item !== 'Звезда';
-};
+function getTagsArray(arr) {
+  const tags = [];
+  (arr || []).forEach(item => {
+    tags.push(item.name);
+  });
+  return tags;
+}
 const trackedFields = [
   {
     name: 'summary',
@@ -22,7 +26,7 @@ const trackedFields = [
   },
   {
     name: 'Assignee',
-    isChanged: issue => issue.oldValue('Assignee') !== null,
+    isChanged: issue => issue.oldValue('Assignee') !== null || issue.oldValue('Assignee') !== '',
     getOldValue: issue =>
       (issue.oldValue('Assignee') && issue.oldValue('Assignee') !== null && issue.oldValue('Assignee').email) || '',
     getValue: issue => (issue.fields.Assignee && issue.fields.Assignee.email && issue.fields.Assignee.email) || '',
@@ -35,22 +39,16 @@ const trackedFields = [
   },
   {
     name: 'tags',
-    isChanged: issue => issue.tags && issue.tags.added && issue.tags.removed,
+    isChanged: issue => {
+      const tags = getTagsArray(issue.tags);
+      const oldTags = getTagsArray(issue.oldValue('tags'));
+      return tags.length !== oldTags.length;
+    },
     getOldValue: issue => {
-      const tags = [];
-      (issue.oldValue('tags') || []).forEach(item => {
-        console.log('removed', item.name);
-        tags.push(item.name);
-      });
-      return tags.filter(tagFilterFn).sort();
+      return getTagsArray(issue.oldValue('tags')).sort();
     },
     getValue: issue => {
-      const tags = [];
-      (issue.tags || []).forEach(item => {
-        console.log('added', item.name);
-        tags.push(item.name);
-      });
-      return tags.filter(tagFilterFn).sort();
+      return getTagsArray(issue.tags).sort();
     },
   },
 ];
@@ -68,9 +66,12 @@ exports.rule = entities.Issue.onChange({
   runOn: 'change',
   action: ctx => {
     const issue = ctx.issue;
+    let email = '';
+    let fullName = '';
     let user = issue.fields.Assignee;
-    if (!user) {
-      user = issue.project.leader;
+    if (user) {
+      email = user.email;
+      fullName = user.fullName;
     }
 
     let changes = [];
@@ -102,21 +103,19 @@ exports.rule = entities.Issue.onChange({
     }
     const tags = [];
     (issue.tags || []).forEach(item => {
-      console.log('added', item.name);
       tags.push(item.name);
     });
     sendHook({
-      tags: tags.filter(tagFilterFn).sort(),
+      tags: tags.sort(),
       id: issue.id,
       url: issue.url,
       reporter: ctx.issue.reporter.email,
       projectName: issue.project.name || '-',
       state: issue.State.name || '-',
       description: issue.description || '-',
-      assignee: user.email,
-      userFullName: user.fullName,
+      assignee: email,
+      userFullName: fullName,
       summary: issue.summary || '-----',
-
       changes,
     });
 
