@@ -2,22 +2,22 @@ const entities = require('@jetbrains/youtrack-scripting-api/entities');
 const http = require('@jetbrains/youtrack-scripting-api/http');
 const workflow = require('@jetbrains/youtrack-scripting-api/workflow');
 const HOOK_URL = 'https://webhook.site';
-const HOOK_PATH = '/qq';
+const HOOK_PATH = '/65888504-dcf1-495d-ab65-6efb62bf8289';
 const HOOK_TOKEN = 'SuperSecretToken';
-function getTagsArray(arr) {
+
+function getTagsArray(arr){
   const tags = [];
-  (arr || []).forEach(item => {
+  (arr ||[]).forEach(item => {
     tags.push(item.name);
   });
   return tags;
 }
-const trackedFields = [
-  {
-    name: 'summary',
-    isChanged: issue => issue.summary !== issue.oldValue('summary'),
-    getValue: issue => issue.summary || '',
-    getOldValue: issue => issue.oldValue('summary') || '',
-  },
+const trackedFields = [{
+  name: 'summary',
+  isChanged: issue => issue.summary !== issue.oldValue('summary'),
+  getValue: issue => issue.summary || '',
+  getOldValue: issue => issue.oldValue('summary') || '',
+},
   {
     name: 'description',
     isChanged: issue => issue.description !== issue.oldValue('description'),
@@ -26,10 +26,13 @@ const trackedFields = [
   },
   {
     name: 'Assignee',
-    isChanged: issue => issue.oldValue('Assignee') !== null || issue.oldValue('Assignee') !== '',
+    isChanged: issue =>
+      (issue.oldValue('Assignee') !== null || issue.oldValue('Assignee') !== '') &&
+      JSON.stringify(issue.oldValue('Assignee')) !== JSON.stringify(issue.fields.Assignee),
     getOldValue: issue =>
       (issue.oldValue('Assignee') && issue.oldValue('Assignee') !== null && issue.oldValue('Assignee').email) || '',
-    getValue: issue => (issue.fields.Assignee && issue.fields.Assignee.email && issue.fields.Assignee.email) || '',
+    getValue: issue => (issue.fields.Assignee && issue.fields.Assignee.email ) || '',
+
   },
   {
     name: 'State',
@@ -41,13 +44,15 @@ const trackedFields = [
     name: 'tags',
     isChanged: issue => {
       const tags = getTagsArray(issue.tags);
-      const oldTags = getTagsArray(issue.oldValue('tags'));
+      const oldTags =  getTagsArray(issue.oldValue('tags'));
       return tags.length !== oldTags.length;
     },
     getOldValue: issue => {
+
       return getTagsArray(issue.oldValue('tags')).sort();
     },
     getValue: issue => {
+
       return getTagsArray(issue.tags).sort();
     },
   },
