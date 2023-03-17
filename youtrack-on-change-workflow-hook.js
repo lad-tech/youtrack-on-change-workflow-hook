@@ -12,6 +12,8 @@ function getTagsArray(arr){
   });
   return tags;
 }
+
+
 const trackedFields = [{
   name: 'summary',
   isChanged: issue => issue.summary !== issue.oldValue('summary'),
@@ -26,12 +28,11 @@ const trackedFields = [{
   },
   {
     name: 'Assignee',
-    isChanged: issue =>
-      (issue.oldValue('Assignee') !== null || issue.oldValue('Assignee') !== '') &&
-      JSON.stringify(issue.oldValue('Assignee')) !== JSON.stringify(issue.fields.Assignee),
+    isChanged: issue => issue.isChanged('Assignee'),
+
     getOldValue: issue =>
-      (issue.oldValue('Assignee') && issue.oldValue('Assignee') !== null && issue.oldValue('Assignee').email) || '',
-    getValue: issue => (issue.fields.Assignee && issue.fields.Assignee.email ) || '',
+      (issue.oldValue('Assignee') && issue.oldValue('Assignee') !== null && issue.oldValue('Assignee').fullName) || '',
+    getValue: issue => (issue.fields.Assignee && issue.fields.Assignee.fullName ) || '',
 
   },
   {
